@@ -181,22 +181,29 @@
         .carousel-container,
         .certificate-carousel-container {
             position: relative;
-            max-width: 1000px; /* Set a max width */
+            max-width: 1000px;
             margin: 0 auto;
-            overflow: hidden; /* Prevent extra items from showing */
+            overflow: hidden;
         }
         
         .carousel-track,
         .certificate-carousel-track {
             display: flex;
-            gap: 20px;
-            transition: transform 0.5s ease;
+            transition: transform 0.5s ease-in-out;
         }
 
         .project-card,
         .certificate-card {
-            flex: 0 0 calc(33.333% - 20px); /* Each item takes 1/3 of the visible width */
-            min-width: 300px; /* Prevent items from shrinking too much */
+            flex: 0 0 calc(100% / 3 - 20px); /* Default: 3 items visible */
+            min-width: 300px;
+        }
+        
+        /* Mobile: Only 1 item at a time */
+        @media screen and (max-width: 768px) {
+            .project-card,
+            .certificate-card {
+                flex: 0 0 calc(100% - 20px); /* Show 1 item per slide */
+            }
         }
         
         .project-card:hover {
@@ -583,11 +590,22 @@
             const nextButton = document.getElementById(nextId);
             const items = track.children;
             let index = 0;
-            const itemWidth = items[0].offsetWidth + 20; // Includes margin
+
+            // const itemWidth = items[0].offsetWidth + 20; // Includes margin
+
+            function getVisibleItems() {
+                return window.innerWidth <= 768 ? 1 : 3; // 1 item on mobile, 3 on desktop
+            }
 
             function updateCarousel() {
+                const itemWidth = items[0].offsetWidth + 20; // Width including margin
+                const visibleItems = getVisibleItems();
+                const maxIndex = Math.max(0, items.length - visibleItems);
+
+                if (index > maxIndex) index = maxIndex; // Prevent scrolling past last item
                 track.style.transform = `translateX(-${index * itemWidth}px)`;
             }
+
 
             nextButton.addEventListener("click", function () {
                 if (index < items.length - 3) { // Adjust for visible cards
@@ -602,6 +620,11 @@
                     updateCarousel();
                 }
             });
+
+            window.addEventListener("resize", updateCarousel); // Adjust on screen resize
+
+            updateCarousel(); // Set initial position
+
         }
 
         // Create modal container
