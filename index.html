@@ -181,6 +181,7 @@
         .carousel-container,
         .certificate-carousel-container {
             position: relative;
+            width: 100%;
             max-width: 1000px;
             margin: 0 auto;
             overflow: hidden;
@@ -194,15 +195,15 @@
 
         .project-card,
         .certificate-card {
-            flex: 0 0 calc(100% / 3 - 20px); /* Default: 3 items visible */
+            flex: 0 0 calc(100% / 3 - 20px); /* Default: Show 3 items */
             min-width: 300px;
         }
-        
+
         /* Mobile: Only 1 item at a time */
         @media screen and (max-width: 768px) {
             .project-card,
             .certificate-card {
-                flex: 0 0 calc(100% - 20px); /* Show 1 item per slide */
+                flex: 0 0 100%; /* Show only 1 item */
             }
         }
         
@@ -580,35 +581,33 @@
     <!-- Carousal and popup -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-        // Setup Carousels
-        setupCarousel("project-track", "project-prev", "project-next");
-        setupCarousel("certificate-track", "cert-prev", "cert-next");
-
-        function setupCarousel(trackId, prevId, nextId) {
+            function setupCarousel(trackId, prevId, nextId) {
             const track = document.getElementById(trackId);
             const prevButton = document.getElementById(prevId);
             const nextButton = document.getElementById(nextId);
-            const items = track.children;
+            const items = Array.from(track.children);
             let index = 0;
-
-            // const itemWidth = items[0].offsetWidth + 20; // Includes margin
 
             function getVisibleItems() {
                 return window.innerWidth <= 768 ? 1 : 3; // 1 item on mobile, 3 on desktop
             }
 
             function updateCarousel() {
-                const itemWidth = items[0].offsetWidth + 20; // Width including margin
                 const visibleItems = getVisibleItems();
-                const maxIndex = Math.max(0, items.length - visibleItems);
+                const itemWidth = track.clientWidth / visibleItems; // Dynamically calculate item width
+                const totalItems = items.length;
+                const maxIndex = Math.max(0, totalItems - visibleItems);
 
-                if (index > maxIndex) index = maxIndex; // Prevent scrolling past last item
+                items.forEach((item) => {
+                    item.style.width = `${itemWidth}px`; // Ensure correct width
+                });
+
+                if (index > maxIndex) index = maxIndex; // Prevent out-of-bounds scrolling
                 track.style.transform = `translateX(-${index * itemWidth}px)`;
             }
 
-
             nextButton.addEventListener("click", function () {
-                if (index < items.length - 3) { // Adjust for visible cards
+                if (index < items.length - getVisibleItems()) {
                     index++;
                     updateCarousel();
                 }
@@ -621,11 +620,14 @@
                 }
             });
 
-            window.addEventListener("resize", updateCarousel); // Adjust on screen resize
+            window.addEventListener("resize", updateCarousel); // Adjust when screen size changes
 
-            updateCarousel(); // Set initial position
-
+            updateCarousel(); // Initial update
         }
+
+        // Apply to both project and certificate carousels
+        setupCarousel("project-track", "project-prev", "project-next");
+        setupCarousel("certificate-track", "cert-prev", "cert-next");
 
         // Create modal container
         const modal = document.createElement("div");
